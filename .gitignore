@@ -1,2 +1,5 @@
 #Python extensions
 *.pyc
+
+#Private config
+*.properties
