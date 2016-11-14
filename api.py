@@ -29,13 +29,18 @@ class Coordinates(Resource):
     address = {
     "number": fields.Str(missing=""),
     "street": fields.Str(required=True),
+    "postalcode": fields.Str(missing=None),
     "city": fields.Str(required=True)
     }
 
     @use_args(address)
     def get(self, args):
         geocode = Geocode()
-        address = args["number"] + " " + args["street"] + ", " + args["city"]
+        address = args["number"] + " " + args["street"] + ", ";
+        if args["postalcode"] is not None:
+            address += args["postalcode"] + " " + args["city"]
+        else:
+            address +=  args["city"]
         result = geocode.get_coordinates_from_address(address)
 
         return result
