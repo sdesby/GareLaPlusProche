@@ -28,7 +28,7 @@ class TestGetDistance(unittest.TestCase):
 
     def test_get_distance_btw_home_sqlv(self):
         #should return 103.50408330561693
-        distance_to_find = 103.50
+        distance_to_find = 103.50408330561693
 
         self.assertEqual(engine.get_distance(48.619380, 3.746980, 48.855698, 2.381795), distance_to_find)
 
