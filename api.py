@@ -4,11 +4,29 @@ from flask import Flask
 from flask_restful import Api, Resource
 from webargs import fields
 from webargs.flaskparser import use_args
+import json
+from bson import json_util
+
 import engine
 from geocode import Geocode
 
 app = Flask(__name__)
 api = Api(app)
+
+address = {
+"number": fields.Str(missing=""),
+"street": fields.Str(required=True),
+"postalcode": fields.Str(missing=None),
+"city": fields.Str(required=True)
+}
+
+def address_to_string(address):
+    result = address["number"] + " " + address["street"] + ", ";
+    if address["postalcode"] is not None:
+        result += address["postalcode"] + " " + address["city"]
+    else:
+        result +=  address["city"]
+    return result
 
 class Distance(Resource):
 
@@ -26,27 +44,26 @@ class Distance(Resource):
 
 class Coordinates(Resource):
 
-    address = {
-    "number": fields.Str(missing=""),
-    "street": fields.Str(required=True),
-    "postalcode": fields.Str(missing=None),
-    "city": fields.Str(required=True)
-    }
-
     @use_args(address)
     def get(self, args):
         geocode = Geocode()
-        address = args["number"] + " " + args["street"] + ", ";
-        if args["postalcode"] is not None:
-            address += args["postalcode"] + " " + args["city"]
-        else:
-            address +=  args["city"]
+        address = address_to_string(args)
         result = geocode.get_coordinates_from_address(address)
 
         return result
 
+class NearestStation(Resource):
+
+    @use_args(address)
+    def get(self, args):
+        geocode = Geocode()
+        coordinates = geocode.get_coordinates_from_address(address_to_string(args))
+        nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+        return json.loads(json_util.dumps(nearest_station))
+
 api.add_resource(Distance, "/distance")
 api.add_resource(Coordinates, "/coordinates")
+api.add_resource(NearestStation, "/nearest-station")
 
 if __name__ == '__main__':
     app.run(debug=True)
