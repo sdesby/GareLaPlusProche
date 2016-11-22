@@ -11,6 +11,19 @@ sys.path.append(conf_parser.get("Path", "main_path"))
 import math
 from services import train_station_service
 
+def calculate_nearest_train_station(user_latitude, user_longitude, list_of_stations):
+    shorter_distance = 99999999
+    nearest_station = None
+
+    for station in list_of_stations:
+        current_distance = get_distance(user_latitude, user_longitude, station["latitude"], station["longitude"])
+
+        if current_distance < shorter_distance:
+            shorter_distance = current_distance
+            nearest_station = station
+
+    return nearest_station
+
 def get_distance(user_latitude, user_longitude, other_latitude, other_longitude):
     earth_radius = 6371000.0
 
@@ -29,16 +42,9 @@ def get_distance(user_latitude, user_longitude, other_latitude, other_longitude)
     return (earth_radius * c) / 1000 #en km
 
 def get_nearest_train_station(user_latitude, user_longitude):
-    shorter_distance = 99999999
     all_train_stations = train_station_service.get_all_train_stations()
+    return calculate_nearest_train_station(user_latitude, user_longitude, all_train_stations)
 
-    nearest_station = None
-
-    for station in all_train_stations:
-        current_distance = get_distance(user_latitude, user_longitude, station["latitude"], station["longitude"])
-
-        if current_distance < shorter_distance:
-            shorter_distance = current_distance
-            nearest_station = station
-
-    return nearest_station
+def get_nearest_train_station_this_big(user_latitude, user_longitude, howbig):
+    all_train_stations = train_station_service.get_all_train_stations_this_big(howbig)
+    return calculate_nearest_train_station(user_latitude, user_longitude, all_train_stations)

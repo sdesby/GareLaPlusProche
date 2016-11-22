@@ -14,18 +14,24 @@ app = Flask(__name__)
 api = Api(app)
 
 address = {
+"address": fields.Str(required=True),
+"howbig": fields.Str(missing="")
+}
+
+detailed_address = {
 "number": fields.Str(missing=""),
 "street": fields.Str(required=True),
 "postalcode": fields.Str(missing=None),
-"city": fields.Str(required=True)
+"city": fields.Str(required=True),
+"howbig": fields.Str(missing="")
 }
 
-def address_to_string(address):
-    result = address["number"] + " " + address["street"] + ", ";
-    if address["postalcode"] is not None:
-        result += address["postalcode"] + " " + address["city"]
+def address_to_string(detailed_address):
+    result = detailed_address["number"] + " " + detailed_address["street"] + ", ";
+    if detailed_address["postalcode"] is not None:
+        result += detailed_address["postalcode"] + " " + detailed_address["city"]
     else:
-        result +=  address["city"]
+        result +=  detailed_address["city"]
     return result
 
 class Distance(Resource):
@@ -44,26 +50,42 @@ class Distance(Resource):
 
 class Coordinates(Resource):
 
-    @use_args(address)
+    @use_args(detailed_address)
     def get(self, args):
         geocode = Geocode()
-        address = address_to_string(args)
-        result = geocode.get_coordinates_from_address(address)
+        detailed_address = address_to_string(args)
+        result = geocode.get_coordinates_from_address(detailed_address)
 
         return result
 
-class NearestStation(Resource):
+class NearestStations(Resource):
 
     @use_args(address)
     def get(self, args):
         geocode = Geocode()
+        coordinates = geocode.get_coordinates_from_address(args["address"])
+        if args["howbig"] == "":
+            nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+        else:
+            nearest_station = engine.get_nearest_train_station_this_big(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]), args["howbig"])
+        return json.loads(json_util.dumps(nearest_station))
+
+class NearestStationDetailedAddress(Resource):
+
+    @use_args(detailed_address)
+    def get(self, args):
+        geocode = Geocode()
         coordinates = geocode.get_coordinates_from_address(address_to_string(args))
-        nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+        if args["howbig"] == "":
+            nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+        else:
+            nearest_station = engine.get_nearest_train_station_this_big(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]), args["howbig"])
         return json.loads(json_util.dumps(nearest_station))
 
 api.add_resource(Distance, "/distance")
 api.add_resource(Coordinates, "/coordinates")
-api.add_resource(NearestStation, "/nearest-station")
+api.add_resource(NearestStations, "/nearest-station")
+api.add_resource(NearestStationDetailedAddress, "/nearest-station-detailed-address")
 
 if __name__ == '__main__':
     app.run(debug=True)

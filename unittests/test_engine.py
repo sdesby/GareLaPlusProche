@@ -37,6 +37,15 @@ class TestGetDistance(unittest.TestCase):
         actual_station = engine.get_nearest_train_station(48.855698, 2.381795)
         self.assertEqual(actual_station["name"], "Paris Gare de Lyon")
 
+    def test_get_nearest_station_of_sqlv_big_as_a(self):
+        #should return Gare de Lyon train station
+        actual_station = engine.get_nearest_train_station_this_big(48.619380, 3.746980, "a")
+        self.assertEqual(actual_station["name"], "Champagne Ardennes TGV")
+
+    def test_get_nearest_station_of_sqlv_big_as_a(self):
+        #should return Gare de Lyon train station
+        actual_station = engine.get_nearest_train_station_this_big(48.619380, 3.746980, "b")
+        self.assertEqual(actual_station["name"], "Romilly-sur-Seine")
 
 if __name__ == '__main__':
     unittest.main()
