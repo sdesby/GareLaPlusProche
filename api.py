@@ -9,6 +9,8 @@ from bson import json_util
 
 import engine
 from geocode import Geocode
+from dao import database
+from pymongo import errors
 
 app = Flask(__name__)
 api = Api(app)
@@ -64,6 +66,7 @@ class NearestStations(Resource):
     def get(self, args):
         geocode = Geocode()
         coordinates = geocode.get_coordinates_from_address(args["address"])
+
         if args["howbig"] == "":
             nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
         else:
@@ -88,4 +91,10 @@ api.add_resource(NearestStations, "/nearest-station")
 api.add_resource(NearestStationDetailedAddress, "/nearest-station-detailed-address")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    #Before all, testing database connection:
+    try:
+        db = database.Database()
+        db.client.server_info()
+        app.run(debug=True)
+    except errors.ServerSelectionTimeoutError:
+        print "Sorry, can't connect to database"
