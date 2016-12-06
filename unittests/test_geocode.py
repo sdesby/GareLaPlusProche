@@ -32,5 +32,14 @@ class TestGeocode(unittest.TestCase):
 
         self.assertLess(distance, 0.5)
 
+    def test_should_return_none_because_address_unknown(self):
+
+        geocode = Geocode()
+
+        address = "tototatatiti"
+        result = geocode.get_coordinates_from_address(address)
+
+        self.assertIsNone(result)
+
 if __name__ == '__main__':
     unittest.main()

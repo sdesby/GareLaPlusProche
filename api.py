@@ -66,12 +66,14 @@ class NearestStations(Resource):
     def get(self, args):
         geocode = Geocode()
         coordinates = geocode.get_coordinates_from_address(args["address"])
-
-        if args["howbig"] == "":
-            nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+        if coordinates is not None:
+            if args["howbig"] == "":
+                nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+            else:
+                nearest_station = engine.get_nearest_train_station_this_big(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]), args["howbig"])
+            return json.loads(json_util.dumps(nearest_station))
         else:
-            nearest_station = engine.get_nearest_train_station_this_big(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]), args["howbig"])
-        return json.loads(json_util.dumps(nearest_station))
+             return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
 
 class NearestStationDetailedAddress(Resource):
 
