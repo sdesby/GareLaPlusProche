@@ -11,7 +11,12 @@ sys.path.append(conf_parser.get("Path", "main_path"))
 import math
 from services import train_station_service
 
+import garelaplusproche_logger as log
+
+LOGGER = log.get_logger("garelaplusproche.engine")
+
 def calculate_nearest_train_station(user_latitude, user_longitude, list_of_stations):
+    LOGGER.info("Calculate Nearest station for coordinates: (" + str(user_latitude) + ", " + str(user_longitude)+ ")")
     shorter_distance = 99999999
     nearest_station = None
 
@@ -22,6 +27,7 @@ def calculate_nearest_train_station(user_latitude, user_longitude, list_of_stati
             shorter_distance = current_distance
             nearest_station = station
 
+    LOGGER.info("Found station: " + str(nearest_station))
     return nearest_station
 
 def get_distance(user_latitude, user_longitude, other_latitude, other_longitude):

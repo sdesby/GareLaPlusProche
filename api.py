@@ -12,6 +12,10 @@ from geocode import Geocode
 from dao import database
 from pymongo import errors
 
+import garelaplusproche_logger as log
+
+LOGGER = log.get_logger("garelaplusproche")
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -34,6 +38,7 @@ def address_to_string(detailed_address):
         result += detailed_address["postalcode"] + " " + detailed_address["city"]
     else:
         result +=  detailed_address["city"]
+    LOGGER.info("Built address \"" + result + "\" from detailed address")
     return result
 
 class Distance(Resource):
@@ -65,27 +70,42 @@ class NearestStations(Resource):
     @use_args(address)
     def get(self, args):
         geocode = Geocode()
-        coordinates = geocode.get_coordinates_from_address(args["address"])
-        if coordinates is not None:
+        address = args["address"]
+        complete_json_answer_for_address = geocode.get_coordinates_from_address(address)
+
+        if complete_json_answer_for_address is not None:
+            latitude = float(complete_json_answer_for_address[0]["geometry"]["lat"])
+            longitude = float(complete_json_answer_for_address[0]["geometry"]["lng"])
+            LOGGER.info("Coordinates for address \"" + address + "\" are: " + str(latitude) + "," + str(longitude))
             if args["howbig"] == "":
-                nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+                nearest_station = engine.get_nearest_train_station(latitude, longitude)
             else:
-                nearest_station = engine.get_nearest_train_station_this_big(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]), args["howbig"])
+                nearest_station = engine.get_nearest_train_station_this_big(latitude, longitude)
             return json.loads(json_util.dumps(nearest_station))
         else:
-             return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
+            LOGGER.error("No answer from OpenCageGeocode for address: \"" + address + "\"")
+            return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
 
 class NearestStationDetailedAddress(Resource):
 
     @use_args(detailed_address)
     def get(self, args):
         geocode = Geocode()
-        coordinates = geocode.get_coordinates_from_address(address_to_string(args))
-        if args["howbig"] == "":
-            nearest_station = engine.get_nearest_train_station(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]))
+        address = address_to_string(args)
+        complete_json_answer_for_address = geocode.get_coordinates_from_address(address)
+
+        if complete_json_answer_for_address is not None:
+            latitude = float(complete_json_answer_for_address[0]["geometry"]["lat"])
+            longitude = float(complete_json_answer_for_address[0]["geometry"]["lng"])
+            LOGGER.info("Coordinates for address \"" + address + "\" are: " + str(latitude) + "," + str(longitude))
+            if args["howbig"] == "":
+                nearest_station = engine.get_nearest_train_station(latitude, longitude)
+            else:
+                nearest_station = engine.get_nearest_train_station_this_big(latitude, longitude)
+            return json.loads(json_util.dumps(nearest_station))
         else:
-            nearest_station = engine.get_nearest_train_station_this_big(float(coordinates[0]["geometry"]["lat"]), float(coordinates[0]["geometry"]["lng"]), args["howbig"])
-        return json.loads(json_util.dumps(nearest_station))
+            LOGGER.error("No answer from OpenCageGeocode for address: \"" + address + "\"")
+            return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
 
 api.add_resource(Distance, "/distance")
 api.add_resource(Coordinates, "/coordinates")
@@ -99,4 +119,4 @@ if __name__ == '__main__':
         db.client.server_info()
         app.run(debug=True)
     except errors.ServerSelectionTimeoutError:
-        print "Sorry, can't connect to database"
+        LOGGER.error("Sorry, can't connect to database")
