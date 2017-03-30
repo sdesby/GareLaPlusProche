@@ -3,3 +3,6 @@
 
 #Private config
 *.properties
+
+#Log files
+*.log

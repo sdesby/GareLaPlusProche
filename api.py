@@ -81,7 +81,7 @@ class NearestStations(Resource):
                 nearest_station = engine.get_nearest_train_station(latitude, longitude)
             else:
                 nearest_station = engine.get_nearest_train_station_this_big(latitude, longitude)
-            return json.loads(json_util.dumps(nearest_station))
+            return json.loads(json_util.dumps(nearest_station, ensure_ascii=False).encode('utf8'))
         else:
             LOGGER.error("No answer from OpenCageGeocode for address: \"" + address + "\"")
             return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
