@@ -1,13 +1,5 @@
 #coding: utf-8
 
-import ConfigParser
-
-conf_parser = ConfigParser.ConfigParser()
-conf_parser.read("./config.properties")
-
-import sys
-sys.path.append(conf_parser.get("Path", "main_path"))
-
 import math
 from services import train_station_service
 
