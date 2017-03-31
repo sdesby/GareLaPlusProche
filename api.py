@@ -113,6 +113,7 @@ api.add_resource(NearestStations, "/nearest-station")
 api.add_resource(NearestStationDetailedAddress, "/nearest-station-detailed-address")
 
 if __name__ == '__main__':
+    LOGGER.info("***** App launched ! *****")
     #Before all, testing database connection:
     try:
         db = database.Database()
