@@ -6,6 +6,7 @@ from webargs import fields
 from webargs.flaskparser import use_args
 import json
 from bson import json_util
+import os
 
 import engine
 from geocode import Geocode
@@ -118,6 +119,7 @@ if __name__ == '__main__':
     try:
         db = database.Database()
         db.client.server_info()
-        app.run(debug=True)
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host='0.0.0.0', port=port, debug=True)
     except errors.ServerSelectionTimeoutError:
         LOGGER.error("Sorry, can't connect to database")
