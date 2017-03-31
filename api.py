@@ -120,6 +120,6 @@ if __name__ == '__main__':
         db = database.Database()
         db.client.server_info()
         port = int(os.environ.get("PORT"))
-        app.run(port=port, debug=True)
+        app.run(host='0.0.0.0', port=port, debug=True)
     except errors.ServerSelectionTimeoutError:
         LOGGER.error("Sorry, can't connect to database")
