@@ -1,15 +1,13 @@
 from pymongo import MongoClient
-import ConfigParser
+import os
 
-conf_parser = ConfigParser.ConfigParser()
-conf_parser.read("./config.properties")
 
 class Database:
 
     def __init__(self):
-        self.client = MongoClient(conf_parser.get("DB", "host"), conf_parser.getint("DB", "port"))
-        self.db = self.client[conf_parser.get("DB", "db_name")]
-        self.train_station_collection = self.db[conf_parser.get("DB", "collection_name")]
+        self.client = MongoClient(os.environ.get('MONGODB_URI'))
+        self.db = self.client[os.environ.get('DB_NAME')]
+        self.train_station_collection = self.db[os.environ.get('DB_COLLECTION')]
 
     @property
     def client(self):

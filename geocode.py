@@ -1,15 +1,12 @@
 #coding: utf-8
 
 from opencage.geocoder import OpenCageGeocode
-import ConfigParser
-
-conf_parser = ConfigParser.ConfigParser()
-conf_parser.read("./config.properties")
+import os
 
 class Geocode:
 
     def __init__(self):
-        self.geocoder = OpenCageGeocode(conf_parser.get("Geocode", "key"))
+        self.geocoder = OpenCageGeocode(os.environ.get('GEOCODE'))
 
     def get_coordinates_from_address(self, address):
         result = self.geocoder.geocode(address, format="json", language="fr")
