@@ -21,8 +21,7 @@ app = Flask(__name__)
 api = Api(app)
 
 address = {
-"address": fields.Str(required=True),
-"howbig": fields.Str(missing="")
+"address": fields.Str(required=True)
 }
 
 detailed_address = {
@@ -78,10 +77,7 @@ class NearestStations(Resource):
             latitude = float(complete_json_answer_for_address[0]["geometry"]["lat"])
             longitude = float(complete_json_answer_for_address[0]["geometry"]["lng"])
             LOGGER.info("Coordinates for address \"" + address + "\" are: " + str(latitude) + "," + str(longitude))
-            if args["howbig"] == "":
-                nearest_station = engine.get_nearest_train_station(latitude, longitude)
-            else:
-                nearest_station = engine.get_nearest_train_station_this_big(latitude, longitude)
+            nearest_station = engine.get_nearest_train_station(latitude, longitude)
             return json.loads(json_util.dumps(nearest_station, ensure_ascii=False).encode('utf8'))
         else:
             LOGGER.error("No answer from OpenCageGeocode for address: \"" + address + "\"")
