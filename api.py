@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 
 from flask import Flask
 from flask_restful import Api, Resource
@@ -20,28 +20,30 @@ LOGGER = log.get_logger("garelaplusproche")
 app = Flask(__name__)
 api = Api(app)
 
-address = {
-"address": fields.Str(required=True)
+nearest_station_args = {
+    "address": fields.Str(required=True),
+    "maxdistance": fields.Str(missing="50")
 }
 
 detailed_address = {
-"number": fields.Str(missing=""),
-"street": fields.Str(required=True),
-"postalcode": fields.Str(missing=None),
-"city": fields.Str(required=True),
+    "number": fields.Str(missing=""),
+    "street": fields.Str(required=True),
+    "postalcode": fields.Str(missing=None),
+    "city": fields.Str(required=True),
 }
 
-def address_to_string(detailed_address):
-    result = detailed_address["number"] + " " + detailed_address["street"] + ", ";
-    if detailed_address["postalcode"] is not None:
-        result += detailed_address["postalcode"] + " " + detailed_address["city"]
+
+def address_to_string(address):
+    result = address["number"] + " " + address["street"] + ", ";
+    if address["postalcode"] is not None:
+        result += address["postalcode"] + " " + address["city"]
     else:
-        result +=  detailed_address["city"]
+        result += address["city"]
     LOGGER.info("Built address \"" + result + "\" from detailed address")
     return result
 
-class Coordinates(Resource):
 
+class Coordinates(Resource):
     @use_args(detailed_address)
     def get(self, args):
         geocode = Geocode()
@@ -50,9 +52,9 @@ class Coordinates(Resource):
 
         return result
 
-class NearestStations(Resource):
 
-    @use_args(address)
+class NearestStations(Resource):
+    @use_args(nearest_station_args)
     def get(self, args):
         geocode = Geocode()
         address = args["address"]
@@ -62,14 +64,15 @@ class NearestStations(Resource):
             latitude = float(complete_json_answer_for_address[0]["geometry"]["lat"])
             longitude = float(complete_json_answer_for_address[0]["geometry"]["lng"])
             LOGGER.info("Coordinates for address \"" + address + "\" are: " + str(latitude) + "," + str(longitude))
-            nearest_station = engine.get_nearest_train_station(latitude, longitude)
+            nearest_station = engine.get_nearest_train_station(latitude, longitude, args["maxdistance"])
             return json.loads(json_util.dumps(nearest_station, ensure_ascii=False).encode('utf8'))
         else:
             LOGGER.error("No answer from OpenCageGeocode for address: \"" + address + "\"")
-            return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
+            return json.loads(
+                "{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
+
 
 class NearestStationDetailedAddress(Resource):
-
     @use_args(detailed_address)
     def get(self, args):
         geocode = Geocode()
@@ -84,7 +87,9 @@ class NearestStationDetailedAddress(Resource):
             return json.loads(json_util.dumps(nearest_station))
         else:
             LOGGER.error("No answer from OpenCageGeocode for address: \"" + address + "\"")
-            return json.loads("{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
+            return json.loads(
+                "{\"error\": {\"message\": \"Bad request. Check if address exists\", \"status\": 400}}"), 400
+
 
 api.add_resource(Coordinates, "/coordinates")
 api.add_resource(NearestStations, "/nearest-station")
@@ -92,7 +97,7 @@ api.add_resource(NearestStationDetailedAddress, "/nearest-station-detailed-addre
 
 if __name__ == '__main__':
     LOGGER.info("***** App launched ! *****")
-    #Before all, testing database connection:
+    # Before all, testing database connection:
     try:
         db = database.Database()
         db.client.server_info()
