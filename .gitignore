@@ -6,3 +6,9 @@
 
 #Log files
 *.log
+
+#idea
+.idea
+
+#virtualenv
+*-venv
